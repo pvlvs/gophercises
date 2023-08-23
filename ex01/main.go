@@ -6,7 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -16,8 +18,10 @@ var remainingTime int
 func main() {
 	var name string
 	var time int
+	var shuffle bool
 	flag.StringVar(&name, "f", "problems.csv", "The name of the csv that should be used")
 	flag.IntVar(&time, "t", 30, "The total time for the quiz")
+	flag.BoolVar(&shuffle, "s", false, "If the questions should be shuffled or not")
 	flag.Parse()
 
 	f, err := os.Open(name)
@@ -26,6 +30,12 @@ func main() {
 
 	remainingTime = time
 	lines := readCSV(f)
+
+	if shuffle {
+		rand.Shuffle(len(lines), func(i, j int) {
+			lines[i], lines[j] = lines[j], lines[i]
+		})
+	}
 
 	launchQuiz(lines)
 }
@@ -62,7 +72,11 @@ func launchQuiz(lines [][]string) {
 		err := sc.Err()
 		check(err)
 
-		if sc.Text() == v[1] {
+		res := sc.Text()
+		res = strings.TrimSpace(res)
+		res = strings.ToLower(res)
+
+		if res == v[1] {
 			points++
 		}
 	}
