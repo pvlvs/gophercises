@@ -7,17 +7,24 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
+var points = 0
+var remainingTime int
+
 func main() {
-	var fName string
-	flag.StringVar(&fName, "f", "problems.csv", "The name of the csv that should be used")
+	var name string
+	var time int
+	flag.StringVar(&name, "f", "problems.csv", "The name of the csv that should be used")
+	flag.IntVar(&time, "t", 30, "The total time for the quiz")
 	flag.Parse()
 
-	f, err := os.Open(fName)
+	f, err := os.Open(name)
 	check(err)
 	defer f.Close()
 
+	remainingTime = time
 	lines := readCSV(f)
 
 	launchQuiz(lines)
@@ -38,12 +45,19 @@ func readCSV(f *os.File) [][]string {
 }
 
 func launchQuiz(lines [][]string) {
-	points := 0
+	sc := bufio.NewScanner(os.Stdin)
+
+	fmt.Print("Press enter when you are ready.")
+
+	sc.Scan()
+	err := sc.Err()
+	check(err)
+
+	go timer(len(lines))
 
 	for _, v := range lines {
 		fmt.Println(v[0])
 
-		sc := bufio.NewScanner(os.Stdin)
 		sc.Scan()
 		err := sc.Err()
 		check(err)
@@ -54,4 +68,18 @@ func launchQuiz(lines [][]string) {
 	}
 
 	fmt.Printf("Score: %v/%v", points, len(lines))
+}
+
+func timer(len int) {
+	for {
+		time.Sleep(1 * time.Second)
+		remainingTime--
+
+		if remainingTime == 0 {
+			break
+		}
+	}
+
+	fmt.Printf("Score: %v/%v", points, len)
+	os.Exit(0)
 }
