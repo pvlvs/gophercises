@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"text/template"
@@ -19,9 +18,7 @@ func routeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if s, ok := sm[path]; ok {
 		t, err := template.ParseFiles("story.tmpl.html")
-		if err != nil {
-			log.Fatal(err)
-		}
+        check(err)
 
 		t.Execute(w, s)
 		return

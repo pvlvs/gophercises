@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"html"
-	"log"
 	"os"
 )
 
@@ -20,9 +19,7 @@ type storyArc struct {
 
 func storyMap() map[string]storyArc {
 	f, err := os.ReadFile("gopher.json")
-	if err != nil {
-		log.Fatal(err)
-	}
+    check(err)
 
 	sa := make(map[string]storyArc)
 	json.Unmarshal(f, &sa)
