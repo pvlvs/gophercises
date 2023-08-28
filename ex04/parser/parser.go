@@ -13,7 +13,7 @@ type Link struct {
 	Text string
 }
 
-func Parse(r io.Reader) (interface{}, error) {
+func Parse(r io.Reader) ([]Link, error) {
 	p, err := html.Parse(r)
 	if err != nil {
 		return nil, err
