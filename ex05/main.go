@@ -36,17 +36,21 @@ var fs flags
 
 func main() {
 	fs.url = flag.String("url", "", "The url to create the sitemap for")
-	fs.depth = flag.Int("depth", int(math.Inf(1)), "Defines the maximum number of links to follow when building the sitemap")
+	fs.depth = flag.Int("depth", math.MaxInt, "Defines the maximum number of links to follow when building the sitemap")
 	flag.Parse()
 
 	if *fs.url == "" {
 		log.Fatal("Please pass a valid URL")
-        os.Exit(1)
+		os.Exit(1)
 	}
-    if *fs.depth < 0 {
-		log.Fatal("Please pass a positive number")
-        os.Exit(1)
-    }
+	if *fs.depth < 0 {
+		log.Fatal("Please pass a positive number", *fs.depth)
+		os.Exit(1)
+	}
+	if *fs.depth > math.MaxInt {
+		log.Fatalf("The biggest possible number is %v", *fs.depth)
+		os.Exit(1)
+	}
 
 	var ps paths
 	ps = append(ps, "/")
@@ -81,13 +85,15 @@ func getLinks(url string) []parser.Link {
 func (ps *paths) getPaths(link string, depth int) {
 	links := getLinks(link)
 	for _, v := range links {
-		externalLink := !(strings.HasPrefix(v.Href, link) || strings.HasPrefix(v.Href, "/"))
+		externalLink := !strings.HasPrefix(v.Href, link) && !strings.HasPrefix(v.Href, "/")
 
 		if !externalLink && !slices.Contains(*ps, v.Href) {
 			*ps = append(*ps, v.Href)
+			link := v.Href
 
-			link := fmt.Sprintf("%v%v", *fs.url, v.Href)
-
+			if !strings.HasPrefix(v.Href, *fs.url) {
+				link = fmt.Sprintf("%v%v", *fs.url, v.Href)
+			}
 			if depth+1 <= *fs.depth {
 				ps.getPaths(link, depth+1)
 			}
