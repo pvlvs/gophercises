@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/pserghei/gophercises/ex04/parser"
@@ -25,23 +27,32 @@ type sitemapUrl struct {
 
 type paths []string
 
-var url *string
+type flags struct {
+	url   *string
+	depth *int
+}
+
+var fs flags
 
 func main() {
-	url = flag.String("url", "", "The url to create the sitemap for")
+	fs.url = flag.String("url", "", "The url to create the sitemap for")
+	fs.depth = flag.Int("depth", int(math.Inf(1)), "Defines the maximum number of links to follow when building the sitemap")
 	flag.Parse()
 
-	if *url == "" {
-		panic("Please pass a valid URL")
+	if *fs.url == "" {
+		log.Fatal("Please pass a valid URL")
+        os.Exit(1)
 	}
+    if *fs.depth < 0 {
+		log.Fatal("Please pass a positive number")
+        os.Exit(1)
+    }
 
 	var ps paths
 	ps = append(ps, "/")
-	ps.getPaths(*url)
+	ps.getPaths(*fs.url, 0)
 
-	sm := ps.makeSitemap()
-
-	fmt.Println(sm)
+	fmt.Println(ps.makeSitemap())
 }
 
 func check(err error) {
@@ -67,16 +78,19 @@ func getLinks(url string) []parser.Link {
 	return links
 }
 
-func (ps *paths) getPaths(link string) {
+func (ps *paths) getPaths(link string, depth int) {
 	links := getLinks(link)
 	for _, v := range links {
 		externalLink := !(strings.HasPrefix(v.Href, link) || strings.HasPrefix(v.Href, "/"))
 
 		if !externalLink && !slices.Contains(*ps, v.Href) {
-			*ps = append(*ps , v.Href)
+			*ps = append(*ps, v.Href)
 
-			link := fmt.Sprintf("%v%v", *url, v.Href)
-			ps.getPaths(link)
+			link := fmt.Sprintf("%v%v", *fs.url, v.Href)
+
+			if depth+1 <= *fs.depth {
+				ps.getPaths(link, depth+1)
+			}
 		}
 	}
 }
@@ -89,7 +103,7 @@ func (ps *paths) makeSitemap() string {
 	for i, v := range *ps {
 		var smUrl sitemapUrl
 
-		link := fmt.Sprintf("%v%v", *url, v)
+		link := fmt.Sprintf("%v%v", *fs.url, v)
 		smUrl.Loc = link
 		sm.Urls[i] = smUrl
 	}
