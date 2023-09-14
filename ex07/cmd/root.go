@@ -21,13 +21,29 @@ func Execute() error {
 }
 
 func init() {
-	openDb()
+	db := openDb()
+	createTodosTable(db)
+    createFinishedTable(db)
+}
 
+func createTodosTable(db *sql.DB) {
 	stmt := `CREATE TABLE IF NOT EXISTS todos (
         todo TEXT UNIQUE NOT NULL
     );`
 
-	db := openDb()
+	_, err := db.Exec(stmt)
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+}
+
+func createFinishedTable(db *sql.DB) {
+	stmt := `CREATE TABLE IF NOT EXISTS finished (
+        todo TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
+    );`
+
 	_, err := db.Exec(stmt)
 	if err != nil {
 		log.Println(err)

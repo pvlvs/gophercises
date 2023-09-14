@@ -33,7 +33,11 @@ var listCmd = &cobra.Command{
 			}
 
 			fmt.Printf("%d. %s\n", index, *todo)
-            index++
+			index++
+		}
+
+		if index == 1 {
+			fmt.Println("You have no open tasks")
 		}
 	},
 }
